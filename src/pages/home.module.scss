@@ -1,1 +1,71 @@
-// TODO
+.posts{
+  margin-top: 4px;
+  
+    > a{
+      display: block;
+      padding: 28px 18px;
+      border-radius: 3px;
+      transition: 0.25s;
+      position: relative;
+      left: -18px;
+
+      &:hover{
+        background-color: #23262c;
+      }
+
+      & + a{
+        margin-top: 0.7rem;
+      }
+
+      strong{
+        font-size: 1.75rem;
+        font-weight: bold;
+        color: var(--heading);
+      }
+  
+      p{
+        margin-top: 0.5rem;
+        font-size: 1.125rem;
+      }
+  
+      ul {
+        list-style: none;
+        margin-top:1.5rem;
+        display: flex;
+        li {
+          font-size:0.875rem;
+          svg {
+            margin-right: 0.5rem;
+          }
+      
+          & + li {
+            margin-left: 1.625rem;
+          }
+        }
+      }
+    }
+
+    button {
+      border:none;
+      background:transparent;
+      font-weight:600;
+      font-size: 1.125rem;
+      color:var(--highlight);
+      margin-top:4rem;
+      padding: 18px;
+      position: relative;
+      left: -18px;
+
+      border: solid 1px var(--highlight);
+      border-radius: 3px;
+
+      transition: 0.2s;
+
+
+
+      &:hover{
+        background-color: var(--highlight);
+        color: black;
+      }
+    }
+}
