@@ -1,6 +1,11 @@
+import { useState } from 'react';
 import { GetStaticProps } from 'next';
 import Link from 'next/link';
 import { FiCalendar, FiUser } from 'react-icons/fi';
+import { format } from 'date-fns';
+// import ptBR from 'date-fns/esm/locale/pt-BR/index.js';
+import ptBR from 'date-fns/locale/pt-BR';
+import Prismic from '@prismicio/client';
 
 import Header from '../components/Header';
 
@@ -28,7 +33,27 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-export default function Home() {
+export default function Home({ postsPagination }: HomeProps): JSX.Element {
+  const formattesPost = postsPagination.results.map(item => {
+    return {
+      ...item,
+      first_publication_date: format(
+        new Date(item.first_publication_date),
+        'dd MMM yyyy',
+        {
+          locale: ptBR,
+        }
+      ),
+    };
+  });
+
+  const [posts, setPosts] = useState<Post[]>(formattesPost);
+  const [nextPage, setNextPage] = useState(postsPagination.next_page);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  async function handleNextPage(){
+    
+  }
   /*
   SpaceTravellingMyBlog
   */
@@ -38,48 +63,66 @@ export default function Home() {
         <Header />
 
         <div className={styles.posts}>
-          <Link href="/">
-            <a>
-              <strong>Algum titulo</strong>
-              <p>Pensando em sincronização em vez e ciclos de vida.</p>
-              <ul>
-                <li>
-                  <FiCalendar />
-                  15 Mar 2021
-                </li>
-                <li>
-                  <FiUser />
-                  Gabriel Borges
-                </li>
-              </ul>
-            </a>
-          </Link>
-          <Link href="/">
-            <a className={styles.linkPost}>
-              <strong>Algum titulo</strong>
-              <p>Pensando em sincronização em vez e ciclos de vida.</p>
-              <ul>
-                <li>
-                  <FiCalendar />
-                  15 Mar 2021
-                </li>
-                <li>
-                  <FiUser />
-                  Gabriel Borges
-                </li>
-              </ul>
-            </a>
-          </Link>
-          <button type="button">Carregar mais posts</button>
+          {posts.map(item => (
+            // <p >{item.first_publication_date}</p>
+            <Link href={`/post/${item.uid}`} key={item.uid}>
+              <a>
+                <strong>{item.data.title}</strong>
+                <p>{item.data.subtitle}</p>
+                <ul>
+                  <li>
+                    <FiCalendar />
+                    {item.first_publication_date}
+                  </li>
+                  <li>
+                    <FiUser />
+                    {item.data.author}
+                  </li>
+                </ul>
+              </a>
+            </Link>
+          ))}
+          <button type="button" onClick={handleNextPage}>
+            Carregar mais posts
+          </button>
         </div>
       </main>
     </>
   );
 }
 
-// export const getStaticProps = async () => {
-//   // const prismic = getPrismicClient();
-//   // const postsResponse = await prismic.query(TODO);
+export const getStaticProps: GetStaticProps = async () => {
+  const prismic = await getPrismicClient();
 
-//   // TODO
-// };
+  const postsResponse = await prismic.query(
+    [Prismic.predicates.at('document.type', 'posts')],
+    {
+      // fetch: ['posts.title', 'posts.banner'], <= Caso eu queira campos especificos
+      pageSize: 1,
+    }
+  );
+
+  const posts = postsResponse.results.map(item => {
+    const { data, id, first_publication_date } = item;
+    return {
+      uid: id,
+      first_publication_date,
+      data: {
+        title: data.title,
+        subtitle: data.subtitle,
+        author: data.author,
+      },
+    };
+  });
+
+  const postsPagination = {
+    next_page: postsResponse.next_page,
+    results: posts,
+  };
+
+  return {
+    props: {
+      postsPagination,
+    },
+  };
+};
