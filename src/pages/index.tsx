@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import Head from 'next/head';
+import { useState } from 'react';
 import { GetStaticProps } from 'next';
 import Link from 'next/link';
 import { FiCalendar, FiUser } from 'react-icons/fi';
@@ -50,10 +51,6 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
   const [currentPage, setCurrentPage] = useState(1);
 
-  useEffect(() => {
-    console.log(nextPage);
-  }, [nextPage]);
-
   async function handleNextPage(): Promise<void> {
     if (currentPage !== 1 && nextPage === null) {
       return;
@@ -84,14 +81,13 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
     setPosts([...posts, ...newPosts]);
   }
 
-  /*
-  SpaceTravellingMyBlog
-  */
   return (
     <>
+      <Head>
+        <title>Home | Spacetraveling</title>
+      </Head>
       <main className={commonStyles.container}>
         <Header />
-
         <div className={styles.posts}>
           {posts.map(item => (
             // <p >{item.first_publication_date}</p>
