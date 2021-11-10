@@ -61,9 +61,9 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
     setCurrentPage(postResults.page);
 
     const newPosts = postResults.results.map(item => {
-      const { data, id, first_publication_date } = item;
+      const { data, uid, first_publication_date } = item;
       return {
-        uid: id,
+        uid,
         first_publication_date: format(
           new Date(first_publication_date),
           'dd MMM yyyy',
@@ -90,7 +90,6 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
         <Header />
         <div className={styles.posts}>
           {posts.map(item => (
-            // <p >{item.first_publication_date}</p>
             <Link href={`/post/${item.uid}`} key={item.uid}>
               <a>
                 <strong>{item.data.title}</strong>
@@ -121,20 +120,19 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const prismic = await getPrismicClient();
+  const prismic = getPrismicClient();
 
   const postsResponse = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
     {
-      // fetch: ['posts.title', 'posts.banner'], <= Caso eu queira campos especificos
       pageSize: 1,
     }
   );
 
   const posts = postsResponse.results.map(item => {
-    const { data, id, first_publication_date } = item;
+    const { data, uid, first_publication_date } = item;
     return {
-      uid: id,
+      uid,
       first_publication_date,
       data: {
         title: data.title,
@@ -153,5 +151,6 @@ export const getStaticProps: GetStaticProps = async () => {
     props: {
       postsPagination,
     },
+    revalidate: 1800,
   };
 };
