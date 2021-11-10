@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GetStaticProps } from 'next';
 import Link from 'next/link';
 import { FiCalendar, FiUser } from 'react-icons/fi';
 import { format } from 'date-fns';
-// import ptBR from 'date-fns/esm/locale/pt-BR/index.js';
 import ptBR from 'date-fns/locale/pt-BR';
 import Prismic from '@prismicio/client';
 
@@ -50,10 +49,41 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
   const [posts, setPosts] = useState<Post[]>(formattesPost);
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
   const [currentPage, setCurrentPage] = useState(1);
-  
-  async function handleNextPage(){
-    
+
+  useEffect(() => {
+    console.log(nextPage);
+  }, [nextPage]);
+
+  async function handleNextPage(): Promise<void> {
+    if (currentPage !== 1 && nextPage === null) {
+      return;
+    }
+
+    const postResults = await fetch(`${nextPage}`).then(r => r.json());
+    setNextPage(postResults.next_page);
+    setCurrentPage(postResults.page);
+
+    const newPosts = postResults.results.map(item => {
+      const { data, id, first_publication_date } = item;
+      return {
+        uid: id,
+        first_publication_date: format(
+          new Date(first_publication_date),
+          'dd MMM yyyy',
+          {
+            locale: ptBR,
+          }
+        ),
+        data: {
+          title: data.title,
+          subtitle: data.subtitle,
+          author: data.author,
+        },
+      };
+    });
+    setPosts([...posts, ...newPosts]);
   }
+
   /*
   SpaceTravellingMyBlog
   */
@@ -82,9 +112,12 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
               </a>
             </Link>
           ))}
-          <button type="button" onClick={handleNextPage}>
-            Carregar mais posts
-          </button>
+
+          {nextPage && (
+            <button type="button" onClick={handleNextPage}>
+              Carregar mais posts
+            </button>
+          )}
         </div>
       </main>
     </>
