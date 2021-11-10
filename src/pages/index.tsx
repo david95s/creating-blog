@@ -58,6 +58,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
 
     const postResults = await fetch(`${nextPage}`).then(r => r.json());
     setNextPage(postResults.next_page);
+
     setCurrentPage(postResults.page);
 
     const newPosts = postResults.results.map(item => {
