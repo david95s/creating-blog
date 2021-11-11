@@ -131,7 +131,6 @@ export default function Home({
   );
 }
 
-
 export const getStaticProps: GetStaticProps = async ({ preview = false }) => {
   const prismic = getPrismicClient();
 

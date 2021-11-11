@@ -15,6 +15,7 @@ import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import Comments from '../../components/Comments';
 
 interface Post {
   first_publication_date: string | null;
@@ -39,6 +40,12 @@ interface PostProps {
 }
 
 export default function Post({ post, preview }: PostProps): JSX.Element {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+
   const totalWords = post.data.content.reduce((acumalator, item) => {
     acumalator += item.heading.split(' ').length;
 
@@ -49,11 +56,6 @@ export default function Post({ post, preview }: PostProps): JSX.Element {
   }, 0);
 
   const readTime = Math.ceil(totalWords / 200);
-
-  const router = useRouter();
-  if (router.isFallback) {
-    return <h1>Carregando...</h1>;
-  }
 
   const formatedDate = format(
     new Date(post.first_publication_date),
@@ -116,6 +118,8 @@ export default function Post({ post, preview }: PostProps): JSX.Element {
             </Link>
           </aside>
         )}
+
+        <Comments />
       </main>
     </>
   );
