@@ -3,5 +3,30 @@
   margin:  4rem auto;
 }
 
+.preview {
+  display: block;
+  width:100%;
+  max-width: 700px;
+  margin: 0 auto;
+  margin-top: 5.5rem;
+  // background: var(--heading);
+  color: rgb(196, 189, 189);
+  text-align:center;
+  border-radius: 4px;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 1.125rem;
 
+  border: solid 1px rgb(196, 189, 189);
+  border-radius: 3px;
+
+  transition: 0.2s;
+
+  &:hover{
+    background-color: var(--highlight);
+    border: solid 1px var(--highlight);
+
+    color: black;
+  }
+}
 
