@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 /* eslint-disable no-param-reassign */
 /* eslint-disable react/no-danger */
 import { useRouter } from 'next/router';
@@ -57,7 +57,7 @@ export default function Post({
   navigation,
   preview,
 }: PostProps): JSX.Element {
-  const [objtPrevAndNext, setObjtPrevAndNext] = React.useState({
+  const [objtPrevAndNext, setObjtPrevAndNext] = useState({
     nextObjt: null,
     prevObjt: null,
   });
@@ -75,7 +75,7 @@ export default function Post({
 
   const { setLoading } = useContext(LoadingContext);
 
-  React.useEffect(() => {
+  useEffect(() => {
     async function theIniatlFetch(): Promise<void> {
       if (navigation) {
         const { prevPost, nextPost } = navigation;
