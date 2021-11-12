@@ -78,29 +78,43 @@
 }
 
 .navigation {
+  position: relative;
   display:flex;
   align-items:center;
   justify-content:space-between;
   border-top: 1px solid var(--border);
+  padding-top: 3rem;
 
-  h3{
-    font-size:1.125rem;
-    font-weight: 400;
-    color:var(--heading);
-    margin-bottom:0.5rem;
-  }
-
-  a {
-    color:var(--highlight);
-    font-weight:600;
-  }
+  
 
   div {
-    padding-top: 3rem;
+
+    h3{
+      font-size:1.125rem;
+      font-weight: 400;
+      color:var(--heading);
+      margin-bottom:1rem;
+    }
+  
+    button {
+      color:var(--highlight);
+      font-weight:600;
+      padding: 8px;
+      border: solid 1px var(--highlight);
+      border-radius: 3px;
+      background-color: transparent;
+      transition: 0.2s;
+  
+      &:hover{
+        background-color: var(--highlight);
+        color: black;
+      }
+    }
   }
 
-  div + div{
+  .rightDiv{
+    position: absolute;
+    right: 0;
     text-align: right;
-
   }
 }

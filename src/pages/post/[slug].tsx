@@ -1,3 +1,4 @@
+import React, { useContext } from 'react';
 /* eslint-disable no-param-reassign */
 /* eslint-disable react/no-danger */
 import { useRouter } from 'next/router';
@@ -16,6 +17,7 @@ import { getPrismicClient } from '../../services/prismic';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 import Comments from '../../components/Comments';
+import { LoadingContext } from '../../components/Contexts/LoadingContext';
 
 interface Post {
   first_publication_date: string | null;
@@ -38,20 +40,16 @@ interface Post {
 interface PostProps {
   post: Post;
   navigation: {
-    prevPost: {
-      uid: string;
-      data: {
-        title: string;
-      };
-    }[];
-    nextPost: {
-      uid: string;
-      data: {
-        title: string;
-      };
-    }[];
+    prevPost: string | null;
+    nextPost: string | null;
   };
   preview: boolean;
+}
+
+interface ToPrevAndNextProps {
+  thePage: number;
+  uid: string;
+  theTitle: string;
 }
 
 export default function Post({
@@ -59,6 +57,53 @@ export default function Post({
   navigation,
   preview,
 }: PostProps): JSX.Element {
+  const [objtPrevAndNext, setObjtPrevAndNext] = React.useState({
+    nextObjt: null,
+    prevObjt: null,
+  });
+
+  async function retunrObjtToPrevAndNext(
+    direction: string
+  ): Promise<ToPrevAndNextProps> {
+    const directionResponse = await fetch(`${direction}`).then(r => r.json());
+    return {
+      thePage: directionResponse.page,
+      uid: directionResponse.results[0].uid,
+      theTitle: directionResponse.results[0].data.title,
+    };
+  }
+
+  const { setLoading } = useContext(LoadingContext);
+
+  React.useEffect(() => {
+    async function theIniatlFetch(): Promise<void> {
+      if (navigation) {
+        const { prevPost, nextPost } = navigation;
+        if (prevPost) {
+          const prevObjt = await retunrObjtToPrevAndNext(prevPost);
+          setObjtPrevAndNext(old => {
+            return { ...old, prevObjt };
+          });
+        }
+        if (nextPost) {
+          const nextObjt = await retunrObjtToPrevAndNext(nextPost);
+          setObjtPrevAndNext(old => {
+            return { ...old, nextObjt };
+          });
+        }
+      }
+    }
+    theIniatlFetch();
+
+    setLoading(false);
+    return () => {
+      setObjtPrevAndNext({
+        nextObjt: null,
+        prevObjt: null,
+      });
+    };
+  }, [navigation, setLoading]);
+
   const router = useRouter();
 
   if (router.isFallback) {
@@ -86,9 +131,9 @@ export default function Post({
 
   const isPostEdited =
     post.first_publication_date !== post.last_publication_date;
-  
+
   let editionDate;
-  if(isPostEdited){
+  if (isPostEdited) {
     editionDate = format(
       new Date(post.last_publication_date),
       "'*editado em' dd MMM yyyy', às' H':'m ",
@@ -96,6 +141,10 @@ export default function Post({
         locale: ptBR,
       }
     );
+  }
+
+  function hadlePassToPage(): void {
+    setLoading(true);
   }
 
   return (
@@ -155,20 +204,28 @@ export default function Post({
         )}
 
         <section className={`${styles.navigation} ${commonStyles.container}`}>
-          {navigation?.prevPost.length > 0 && (
+          {objtPrevAndNext.prevObjt && (
             <div>
-              <h3>{navigation?.prevPost[0].data.title}</h3>
-              <Link href={`/post/${navigation?.prevPost[0].uid}`}>
-                <a>Anterior</a>
-              </Link>
+              <h3>{objtPrevAndNext.prevObjt.theTitle}</h3>
+              <button type="button" onClick={hadlePassToPage}>
+                <Link
+                  href={`/post/${objtPrevAndNext.prevObjt.uid}${objtPrevAndNext.prevObjt.thePage}`}
+                >
+                  <a>Anterior</a>
+                </Link>
+              </button>
             </div>
           )}
-          {navigation?.nextPost.length > 0 && (
-            <div>
-              <h3>{navigation?.nextPost[0].data.title}</h3>
-              <Link href={`/post/${navigation?.nextPost[0].uid}`}>
-                <a>Proximo</a>
-              </Link>
+          {objtPrevAndNext.nextObjt && (
+            <div className={styles.rightDiv}>
+              <h3>{objtPrevAndNext.nextObjt.theTitle}</h3>
+              <button type="button" onClick={hadlePassToPage}>
+                <Link
+                  href={`/post/${objtPrevAndNext.nextObjt.uid}${objtPrevAndNext.nextObjt.thePage}`}
+                >
+                  <a>Proximo</a>
+                </Link>
+              </button>
             </div>
           )}
         </section>
@@ -207,27 +264,25 @@ export const getStaticProps: GetStaticProps = async ({
   const prismic = getPrismicClient();
   const { slug } = params;
 
-  const response = await prismic.getByUID('posts', String(slug), {
+  const lastIndex = slug.length - 1;
+
+  const thePage = Number(slug[lastIndex]);
+
+  const pureSlug = slug.slice(0, lastIndex);
+
+  const response = await prismic.getByUID('posts', String(pureSlug), {
     ref: previewData?.ref || null,
   });
 
-  const prevPost = await prismic.query(
-    [Prismic.Predicates.at('document.type', 'posts')],
+  const postsResponse = await prismic.query(
+    [Prismic.predicates.at('document.type', 'posts')],
     {
       pageSize: 1,
-      after: response.id,
-      orderings: '[document.first_publication_date]',
+      page: thePage,
     }
   );
 
-  const nextPost = await prismic.query(
-    [Prismic.Predicates.at('document.type', 'posts')],
-    {
-      pageSize: 1,
-      after: response.id,
-      orderings: '[document.last_publication_date desc]',
-    }
-  );
+  const { prev_page: prevPost, next_page: nextPost } = postsResponse;
 
   const post = {
     uid: response.uid,
@@ -248,8 +303,8 @@ export const getStaticProps: GetStaticProps = async ({
     props: {
       post,
       navigation: {
-        prevPost: prevPost?.results,
-        nextPost: nextPost?.results,
+        prevPost,
+        nextPost,
       },
       preview,
     },
